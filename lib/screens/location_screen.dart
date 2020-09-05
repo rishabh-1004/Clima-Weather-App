@@ -1,6 +1,9 @@
+import 'package:clima/services/networking.dart';
 import 'package:flutter/material.dart';
 import 'package:clima/utilities/constants.dart';
 import 'dart:convert';
+import '../services/networking.dart';
+import 'city_screen.dart';
 
 class LocationScreen extends StatefulWidget {
   LocationScreen({@required this.weatherDataTransfer});
@@ -23,12 +26,27 @@ class _LocationScreenState extends State<LocationScreen> {
   }
 
   void updateUI(dynamic weatherinfo) {
-    double temperature_temp = weatherinfo["main"]["temp"];
-    temperature = temperature_temp.toInt();
-    condition = weatherinfo['weather'][0]['id'];
-    cityName = weatherinfo['name'];
+    setState(() {
+      if (weatherinfo == null) {
+        temperature = 0;
+        condition = 0;
+        cityName = "Error";
+        return;
+      }
+      print("It did reach here");
+      print(weatherinfo);
+      print(weatherinfo["main"]["temp"]);
+      double temperature_temp = weatherinfo["main"]["temp"];
+      temperature = temperature_temp.toInt();
+
+      condition = weatherinfo['weather'][0]['id'];
+      print(condition);
+      cityName = weatherinfo['name'];
+      print(cityName);
+    });
   }
 
+  NetworkMethods networks = NetworkMethods();
   //var temperature= weatherinfo["main"]["temp"];
   @override
   Widget build(BuildContext context) {
@@ -59,7 +77,18 @@ class _LocationScreenState extends State<LocationScreen> {
                     ),
                   ),
                   FlatButton(
-                    onPressed: () {},
+                    onPressed: () async {
+                      var cityDetails = await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => CityScreen()),
+                      );
+                      if (cityDetails != null) {
+                        var newWeatherData =
+                            await networks.getWeatherByCity(cityDetails);
+                        print(newWeatherData);
+                        updateUI(json.decode(newWeatherData));
+                      }
+                    },
                     child: Icon(
                       Icons.location_city,
                       size: 50.0,
